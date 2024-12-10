@@ -7,7 +7,7 @@ VSCode
 * ms-python.python
 
 * pip install -U yt-dlp
-  or
+  
 * pip install --upgrade yt-dlp
 
 * Run Python File in Terminal
