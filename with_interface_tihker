@@ -1,0 +1,119 @@
+import yt_dlp
+import tkinter as tk
+from tkinter import messagebox
+import threading
+
+
+# Video indirme işlemlerini gerçekleştiren fonksiyon
+def download_video():
+    url = url_entry.get().strip()
+    if not url:
+        messagebox.showwarning("Uyarı", "Lütfen bir URL girin!")
+        return
+
+    download_button.config(state=tk.DISABLED)  # Butonu devre dışı bırak
+    info_label.config(text="İndirme işlemi başlıyor...")
+
+    def run_download():
+        try:
+            ydl_opts = {
+                "format": "best",
+                "outtmpl": "%(title)s.%(ext)s",
+                "noplaylist": True,
+                "quiet": False,
+                "ignoreerrors": True,
+                "no_warnings": True,
+            }
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
+
+            # İndirme tamamlandıktan sonra kullanıcıya bir bildirim göster
+            messagebox.showinfo("İndirme Tamamlandı", "İndirme işlemi başarıyla tamamlandı!")
+            info_label.config(text="İndirme işlemi başarıyla tamamlandı.")
+        except Exception as e:
+            messagebox.showerror("Hata", f"Bir hata oluştu: {e}")
+            info_label.config(text="İndirme işlemi başarısız.")
+        finally:
+            download_button.config(state=tk.NORMAL)
+
+    threading.Thread(target=run_download, daemon=True).start()
+
+
+# Sağ tık menüsünde "Yapıştır" fonksiyonu
+def paste_from_clipboard():
+    try:
+        url = root.clipboard_get()  # Panodaki içeriği al
+        url_entry.delete(0, tk.END)  # Önce giriş kutusunu temizle
+        url_entry.insert(0, url)  # Yapıştır
+    except tk.TclError:
+        messagebox.showerror("Hata", "Panoda bir URL bulunamadı!")
+
+
+# Sağ tık menüsünü oluştur
+def show_context_menu(event):
+    context_menu.post(event.x_root, event.y_root)  # Sağ tık menüsünü göster
+
+
+# Arayüzü oluştur
+root = tk.Tk()  # Ana pencereyi oluştur
+root.title("🎥 YouTube Video İndirme Aracı")
+root.geometry("700x500")
+root.configure(bg="#1F2D3D")  # Arka plan rengi modern bir tonla değiştirildi.
+
+# Sağ tık menüsünü oluştur
+context_menu = tk.Menu(root, tearoff=0)  # `root` burada tanımlandığından önce çalışabilir.
+context_menu.add_command(label="Yapıştır", command=paste_from_clipboard)
+
+# Başlık Alanı
+title_label = tk.Label(
+    root,
+    text="YouTube Video İndirme",
+    font=("Helvetica", 20, "bold"),
+    bg="#1F2D3D",
+    fg="white",
+)
+title_label.pack(pady=10)
+
+# Bilgilendirme Metni
+info_label = tk.Label(
+    root,
+    text="Bir video URL'sini girin ve indirme işlemini başlatmak için tıklayın.",
+    font=("Helvetica", 12),
+    bg="#1F2D3D",
+    fg="white",
+)
+info_label.pack(pady=5)
+
+# URL Giriş Alanı
+url_entry = tk.Entry(root, font=("Helvetica", 14), width=50, justify="center")
+url_entry.pack(pady=10)
+
+# Sağ tıkla yapıştır işlevini ekle
+url_entry.bind("<Button-3>", show_context_menu)  # Sağ tık tespit eder
+
+# İndirme Butonu (Modern Tasarım)
+download_button = tk.Button(
+    root,
+    text="📥 İndirmeye Başla",
+    font=("Helvetica", 14, "bold"),
+    bg="#3498DB",
+    fg="white",
+    activebackground="#2980B9",
+    relief="flat",
+    command=download_video,
+)
+download_button.pack(pady=20)
+
+# Alt Bilgi Alanı
+footer_label = tk.Label(
+    root,
+    text="EPWEB",
+    font=("Helvetica", 10),
+    bg="#1F2D3D",
+    fg="white",
+)
+footer_label.pack(side=tk.BOTTOM, pady=10)
+
+# Arayüz Döngüsünü Başlat
+root.mainloop()
